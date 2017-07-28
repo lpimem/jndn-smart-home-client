@@ -18,7 +18,7 @@ public class Application {
 	public static void main(String[] args) {
 		final Name group = new Name(Global.LOCAL_HOME + "/READ");
 		TemperatureReader reader = new TemperatureReader(group);
-		reader.init(new Name(Global.APP_PREFIX));
+		reader.init(new Name(Global.DEVICE_PREFIX + "/home-client"));
 		TemperatureReader.OnDataCallback onData = new TemperatureReader.OnDataCallback() {
 			@Override
 			public void onData(String desc, int temperature) {

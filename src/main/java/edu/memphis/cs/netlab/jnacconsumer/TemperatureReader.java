@@ -1,12 +1,9 @@
 package edu.memphis.cs.netlab.jnacconsumer;
 
-import static edu.memphis.cs.netlab.nacapp.Global.*;
-
 import edu.memphis.cs.netlab.nacapp.ConsumerWrapper;
 import edu.memphis.cs.netlab.nacapp.Global;
 import edu.memphis.cs.netlab.nacapp.NACNode;
 import edu.memphis.cs.netlab.nacapp.Utils;
-
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.encrypt.Consumer;
@@ -14,9 +11,10 @@ import net.named_data.jndn.encrypt.EncryptError;
 import net.named_data.jndn.security.certificate.IdentityCertificate;
 import net.named_data.jndn.util.Blob;
 
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static edu.memphis.cs.netlab.nacapp.Global.*;
 
 
 /**
@@ -47,9 +45,9 @@ public class TemperatureReader extends NACNode {
 			new Consumer.OnConsumeComplete() {
 				@Override
 				public void onConsumeComplete(Data data, Blob result) {
-					int tempReading = result.buf().getInt();
-					LOGGER.info("GOT temperature: " + String.valueOf(tempReading));
-					callback.onData("success", tempReading);
+					String temp = new String(result.getImmutableArray());
+					LOGGER.info("GOT temperature: " + String.valueOf(temp));
+					callback.onData("success", (int)(Double.parseDouble(temp)));
 				}
 			},
 			new EncryptError.OnError() {
@@ -63,13 +61,13 @@ public class TemperatureReader extends NACNode {
 					} catch (Throwable e) {
 						LOGGER.log(Level.SEVERE, e.getMessage());
 					}
-					LOGGER.info("restart reading in 3 seconds...");
-					try {
-						TimeUnit.SECONDS.sleep(3);
-						read(location, callback);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+//					LOGGER.info("restart reading in 3 seconds...");
+//					try {
+//						TimeUnit.SECONDS.sleep(3);
+//						read(location, callback);
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
 				}
 			});
 	}
@@ -85,7 +83,7 @@ public class TemperatureReader extends NACNode {
 		OnRegisterIdentitySuccess callback = new OnRegisterIdentitySuccess() {
 			@Override
 			public void onNewCertificate(IdentityCertificate cert) {
-				//				m_consumerWrapper.setCertificate(cert);
+				m_consumerWrapper.setCertificate(cert);
 				onSuccess.run();
 			}
 		};
@@ -101,6 +99,10 @@ public class TemperatureReader extends NACNode {
 		initConsumer(appPrefix);
 	}
 
+	/**
+	 * Create consumer instance with name "${appPrefix}/Consumer"
+	 * @param appPrefix
+	 */
 	private void initConsumer(Name appPrefix) {
 		Name consumerName = new Name(appPrefix);
 		consumerName.append("Consumer");
