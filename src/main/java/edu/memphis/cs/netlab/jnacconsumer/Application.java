@@ -17,16 +17,16 @@ public class Application {
 
 	public static void main(String[] args) {
 		final Name group = new Name(Global.LOCAL_HOME + "/READ");
-		TemperatureReader reader = new TemperatureReader(group);
+		final TemperatureReader reader = new TemperatureReader(group);
 		reader.init(new Name(Global.DEVICE_PREFIX + "/home-client"));
-		TemperatureReader.OnDataCallback onData = new TemperatureReader.OnDataCallback() {
+		final TemperatureReader.OnDataCallback onData = new TemperatureReader.OnDataCallback() {
 			@Override
 			public void onData(String desc, int temperature) {
 				logger.log(Level.INFO, String.format("%s: %d", desc, temperature));
 			}
 		};
 
-		Runnable onRequestPermissionSuccess = new Runnable() {
+		final Runnable onRequestPermissionSuccess = new Runnable() {
 			@Override
 			public void run() {
 				logger.info("permission granted.");
@@ -34,20 +34,17 @@ public class Application {
 			}
 		};
 
-		Runnable onRequestPermissionFailed = new Runnable() {
+		final Runnable onRequestPermissionFailed = new Runnable() {
 			@Override
 			public void run() {
 				logger.warning("permission not granted.");
 			}
 		};
 
-		Runnable onRegisterIdentity = new Runnable() {
+		final Runnable onRegisterIdentity = new Runnable() {
 			@Override
 			public void run() {
-				reader.requestGrantPermission(
-					"bedroom",
-					onRequestPermissionSuccess,
-					onRequestPermissionFailed);
+				reader.requestGrantPermission("bedroom", onRequestPermissionSuccess, onRequestPermissionFailed);
 			}
 		};
 

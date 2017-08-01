@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 
 import static edu.memphis.cs.netlab.nacapp.Global.*;
 
-
 /**
  * Description:
  * <p>
@@ -39,44 +38,39 @@ public class TemperatureReader extends NACNode {
 	}
 
 	public void read(final Name location, final OnDataCallback callback) {
-		Name servicePrefix = new Name(
-			LOCAL_HOME + SAMPLE + LOCATION + location + "/temperature/" + Utils.nowIsoString());
-		m_consumer.consume(servicePrefix,
-			new Consumer.OnConsumeComplete() {
-				@Override
-				public void onConsumeComplete(Data data, Blob result) {
-					String temp = new String(result.getImmutableArray());
-					LOGGER.info("GOT temperature: " + String.valueOf(temp));
-					callback.onData("success", (int)(Double.parseDouble(temp)));
+		final Name servicePrefix = new Name(
+				LOCAL_HOME + SAMPLE + LOCATION + location + "/temperature/" + Utils.nowIsoString());
+		m_consumer.consume(servicePrefix, new Consumer.OnConsumeComplete() {
+			@Override
+			public void onConsumeComplete(Data data, Blob result) {
+				String temp = new String(result.getImmutableArray());
+				LOGGER.info("GOT temperature: " + String.valueOf(temp));
+				callback.onData("success", (int) (Double.parseDouble(temp)));
+			}
+		}, new EncryptError.OnError() {
+			@Override
+			public void onError(EncryptError.ErrorCode errorCode, String message) {
+				LOGGER.log(Level.SEVERE, "Error consuming " + servicePrefix.toUri() + ": " + errorCode.name());
+				LOGGER.log(Level.SEVERE, message);
+				try {
+					callback.onData("Error: " + errorCode.name(), 0);
+				} catch (Throwable e) {
+					LOGGER.log(Level.SEVERE, e.getMessage());
 				}
-			},
-			new EncryptError.OnError() {
-				@Override
-				public void onError(EncryptError.ErrorCode errorCode, String message) {
-					LOGGER.log(Level.SEVERE,
-						"Error consuming " + servicePrefix.toUri() + ": " + errorCode.name());
-					LOGGER.log(Level.SEVERE, message);
-					try {
-						callback.onData("Error: " + errorCode.name(), 0);
-					} catch (Throwable e) {
-						LOGGER.log(Level.SEVERE, e.getMessage());
-					}
-//					LOGGER.info("restart reading in 3 seconds...");
-//					try {
-//						TimeUnit.SECONDS.sleep(3);
-//						read(location, callback);
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
-				}
-			});
+				//					LOGGER.info("restart reading in 3 seconds...");
+				//					try {
+				//						TimeUnit.SECONDS.sleep(3);
+				//						read(location, callback);
+				//					} catch (InterruptedException e) {
+				//						e.printStackTrace();
+				//					}
+			}
+		});
 	}
 
-	public void requestGrantPermission(
-		String location, final Runnable onSuccess, final Runnable onFail) {
+	public void requestGrantPermission(String location, final Runnable onSuccess, final Runnable onFail) {
 		final String datatype = LOCATION + Utils.nameComponent(location);
-		super.requestGrantPermission(
-			m_consumerWrapper.getCertificate().getName(), datatype, onSuccess, onFail);
+		super.requestGrantPermission(m_consumerWrapper.getCertificate().getName(), datatype, onSuccess, onFail);
 	}
 
 	public void registerIdentity(final Runnable onSuccess) {
@@ -106,8 +100,7 @@ public class TemperatureReader extends NACNode {
 	private void initConsumer(Name appPrefix) {
 		Name consumerName = new Name(appPrefix);
 		consumerName.append("Consumer");
-		m_consumerWrapper =
-			ConsumerWrapper.make(consumerName, m_group, m_keychain, m_face, CONSUMER_DB_PATH);
+		m_consumerWrapper = ConsumerWrapper.make(consumerName, m_group, m_keychain, m_face, CONSUMER_DB_PATH);
 		m_consumer = m_consumerWrapper.getConsumer();
 	}
 
