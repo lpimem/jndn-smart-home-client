@@ -8,7 +8,7 @@ import net.named_data.jndn.Data;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.encrypt.Consumer;
 import net.named_data.jndn.encrypt.EncryptError;
-import net.named_data.jndn.security.certificate.IdentityCertificate;
+import net.named_data.jndn.security.certificate.Certificate;
 import net.named_data.jndn.util.Blob;
 
 import java.util.logging.Level;
@@ -76,7 +76,7 @@ public class TemperatureReader extends NACNode {
 	public void registerIdentity(final Runnable onSuccess) {
 		OnRegisterIdentitySuccess callback = new OnRegisterIdentitySuccess() {
 			@Override
-			public void onNewCertificate(IdentityCertificate cert) {
+			public void onNewCertificate(Certificate cert) {
 				m_consumerWrapper.setCertificate(cert);
 				onSuccess.run();
 			}
