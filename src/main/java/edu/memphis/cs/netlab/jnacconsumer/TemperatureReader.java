@@ -1,9 +1,6 @@
 package edu.memphis.cs.netlab.jnacconsumer;
 
-import edu.memphis.cs.netlab.nacapp.ConsumerWrapper;
-import edu.memphis.cs.netlab.nacapp.Global;
-import edu.memphis.cs.netlab.nacapp.NACNode;
-import edu.memphis.cs.netlab.nacapp.Utils;
+import edu.memphis.cs.netlab.nacapp.*;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.encrypt.Consumer;
@@ -24,7 +21,6 @@ import static edu.memphis.cs.netlab.nacapp.Global.*;
 
 public class TemperatureReader extends NACNode {
 	private final static String TAG = NACNode.class.getName();
-	//  private static final Logger LOGGER = Logger.getLogger(TAG);
 
 	private static final Logger LOGGER = Global.LOGGER;
 
@@ -87,20 +83,19 @@ public class TemperatureReader extends NACNode {
 		super.registerIdentity(certName, cert, callback);
 	}
 
-	@Override
-	public void init(Name appPrefix) {
+	public void init(Name appPrefix, ConsumerDBSource dbSource) {
 		super.init(appPrefix);
-		initConsumer(appPrefix);
+		initConsumer(appPrefix, dbSource);
 	}
 
 	/**
 	 * Create consumer instance with name "${appPrefix}/Consumer"
 	 * @param appPrefix
 	 */
-	private void initConsumer(Name appPrefix) {
+	private void initConsumer(Name appPrefix, ConsumerDBSource dbSource) {
 		Name consumerName = new Name(appPrefix);
 		consumerName.append("Consumer");
-		m_consumerWrapper = ConsumerWrapper.make(consumerName, m_group, m_keychain, m_face, CONSUMER_DB_PATH);
+		m_consumerWrapper = ConsumerWrapper.make(consumerName, m_group, m_keychain, m_face, dbSource);
 		m_consumer = m_consumerWrapper.getConsumer();
 	}
 
