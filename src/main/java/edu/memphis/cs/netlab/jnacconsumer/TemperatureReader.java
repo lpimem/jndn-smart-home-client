@@ -1,6 +1,7 @@
 package edu.memphis.cs.netlab.jnacconsumer;
 
 import edu.memphis.cs.netlab.nacapp.*;
+
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.encrypt.Consumer;
@@ -20,98 +21,94 @@ import static edu.memphis.cs.netlab.nacapp.Global.*;
  */
 
 public class TemperatureReader extends NACNode {
-	private final static String TAG = NACNode.class.getName();
+  private final static String TAG = NACNode.class.getName();
 
-	private static final Logger LOGGER = Global.LOGGER;
+  private static final Logger LOGGER = Global.LOGGER;
 
-	public TemperatureReader(Name group) {
-		super();
-		m_group = group;
-	}
+  public TemperatureReader(Name group) {
+    super();
+    m_group = group;
+  }
 
-	public interface OnDataCallback {
-		void onData(String desc, int temperature);
-	}
+  public interface OnDataCallback {
+    void onData(String desc, int temperature);
 
-	public void read(final Name location, final OnDataCallback callback) {
-		final Name servicePrefix = new Name(
-				LOCAL_HOME + SAMPLE + LOCATION + location + "/temperature/" + Utils.nowIsoString());
-		m_consumer.consume(servicePrefix, new Consumer.OnConsumeComplete() {
-			@Override
-			public void onConsumeComplete(Data data, Blob result) {
-				String temp = new String(result.getImmutableArray());
-				LOGGER.info("GOT temperature: " + String.valueOf(temp));
-				callback.onData("success", (int) (Double.parseDouble(temp)));
-			}
-		}, new EncryptError.OnError() {
-			@Override
-			public void onError(EncryptError.ErrorCode errorCode, String message) {
-				LOGGER.log(Level.SEVERE, "Error consuming " + servicePrefix.toUri() + ": " + errorCode.name());
-				LOGGER.log(Level.SEVERE, message);
-				try {
-					callback.onData("Error: " + errorCode.name(), 0);
-				} catch (Throwable e) {
-					LOGGER.log(Level.SEVERE, e.getMessage());
-				}
-				//					LOGGER.info("restart reading in 3 seconds...");
-				//					try {
-				//						TimeUnit.SECONDS.sleep(3);
-				//						read(location, callback);
-				//					} catch (InterruptedException e) {
-				//						e.printStackTrace();
-				//					}
-			}
-		});
-	}
+    void onFail(String reason);
+  }
 
-	public void requestGrantPermission(String location, final Runnable onSuccess, final Runnable onFail) {
-		final String datatype = LOCATION + Utils.nameComponent(location);
-		super.requestGrantPermission(m_consumerWrapper.getCertificate().getName(), datatype, onSuccess, onFail);
-	}
+  public void read(final Name location, final OnDataCallback callback) {
+    final Name servicePrefix = new Name(
+        LOCAL_HOME + SAMPLE + LOCATION + location + "/temperature/" + Utils.nowIsoString());
+    m_consumer.consume(servicePrefix, new Consumer.OnConsumeComplete() {
+      @Override
+      public void onConsumeComplete(Data data, Blob result) {
+        String temp = new String(result.getImmutableArray());
+        LOGGER.info("GOT temperature: " + String.valueOf(temp));
+        callback.onData("success", (int) (Double.parseDouble(temp)));
+      }
+    }, new EncryptError.OnError() {
+      @Override
+      public void onError(EncryptError.ErrorCode errorCode, String message) {
+        LOGGER.log(Level.SEVERE, "Error consuming " + servicePrefix.toUri() + ": " + errorCode.name());
+        LOGGER.log(Level.SEVERE, message);
+        try {
+          callback.onFail(errorCode.name());
+        } catch (Throwable e) {
+          LOGGER.log(Level.SEVERE, e.getMessage());
+        }
+      }
+    });
+  }
 
-	public void registerIdentity(final Runnable onSuccess) {
-		OnRegisterIdentitySuccess callback = new OnRegisterIdentitySuccess() {
-			@Override
-			public void onNewCertificate(Certificate cert) {
-				m_consumerWrapper.setCertificate(cert);
-				onSuccess.run();
-			}
-		};
+  public void requestGrantPermission(String location, final Runnable onSuccess, final Runnable onFail) {
+    final String datatype = LOCATION + Utils.nameComponent(location);
+    super.requestGrantPermission(m_consumerWrapper.getCertificate().getName(), datatype, onSuccess, onFail);
+  }
 
-		Data cert = m_consumerWrapper.getCertificate();
-		Name certName = cert.getName();
-		super.registerIdentity(certName, cert, callback);
-	}
+  public void registerIdentity(final Runnable onSuccess) {
+    OnRegisterIdentitySuccess callback = new OnRegisterIdentitySuccess() {
+      @Override
+      public void onNewCertificate(Certificate cert) {
+        m_consumerWrapper.setCertificate(cert);
+        onSuccess.run();
+      }
+    };
 
-	public void init(Name appPrefix, ConsumerDBSource dbSource) {
-		super.init(appPrefix);
-		initConsumer(appPrefix, dbSource);
-	}
+    Data cert = m_consumerWrapper.getCertificate();
+    Name certName = cert.getName();
+    super.registerIdentity(certName, cert, callback);
+  }
 
-	/**
-	 * Create consumer instance with name "${appPrefix}/Consumer"
-	 * @param appPrefix
-	 */
-	private void initConsumer(Name appPrefix, ConsumerDBSource dbSource) {
-		Name consumerName = new Name(appPrefix);
-		consumerName.append("Consumer");
-		m_consumerWrapper = ConsumerWrapper.make(consumerName, m_group, m_keychain, m_face, dbSource);
-		m_consumer = m_consumerWrapper.getConsumer();
-	}
+  public void init(Name appPrefix, ConsumerDBSource dbSource) {
+    super.init(appPrefix);
+    initConsumer(appPrefix, dbSource);
+  }
 
-	public Consumer getConsumer() {
-		return m_consumer;
-	}
+  /**
+   * Create consumer instance with name "${appPrefix}/Consumer"
+   *
+   * @param appPrefix
+   */
+  private void initConsumer(Name appPrefix, ConsumerDBSource dbSource) {
+    Name consumerName = new Name(appPrefix);
+    consumerName.append("Consumer");
+    m_consumerWrapper = ConsumerWrapper.make(consumerName, m_group, m_keychain, m_face, dbSource);
+    m_consumer = m_consumerWrapper.getConsumer();
+  }
 
-	public ConsumerWrapper getConsumerWrapper() {
-		return m_consumerWrapper;
-	}
+  public Consumer getConsumer() {
+    return m_consumer;
+  }
 
-	public Name getGroup() {
-		return m_group;
-	}
+  public ConsumerWrapper getConsumerWrapper() {
+    return m_consumerWrapper;
+  }
 
-	private Consumer m_consumer;
-	private ConsumerWrapper m_consumerWrapper;
-	private final Name m_group;
+  public Name getGroup() {
+    return m_group;
+  }
+
+  private Consumer m_consumer;
+  private ConsumerWrapper m_consumerWrapper;
+  private final Name m_group;
 }
