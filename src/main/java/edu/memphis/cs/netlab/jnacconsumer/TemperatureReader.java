@@ -25,9 +25,10 @@ public class TemperatureReader extends NACNode {
 
   private static final Logger LOGGER = Global.LOGGER;
 
-  public TemperatureReader(Name group) {
-    super();
+  public TemperatureReader(Name namespace, Name group, ConsumerDBSource dbSource) {
+    super(namespace);
     m_group = group;
+    initConsumer(namespace, dbSource);
   }
 
   public interface OnDataCallback {
@@ -77,11 +78,6 @@ public class TemperatureReader extends NACNode {
     Data cert = m_consumerWrapper.getCertificate();
     Name certName = cert.getName();
     super.registerIdentity(certName, cert, callback);
-  }
-
-  public void init(Name appPrefix, ConsumerDBSource dbSource) {
-    super.init(appPrefix);
-    initConsumer(appPrefix, dbSource);
   }
 
   /**

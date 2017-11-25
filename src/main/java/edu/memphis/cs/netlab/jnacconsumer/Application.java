@@ -26,10 +26,9 @@ public class Application {
 
   public static void main(String[] args) {
     final Name group = new Name(Global.LOCAL_HOME + "/READ");
-    final TemperatureReader reader = new TemperatureReader(group);
-
-    reader.init(
+    final TemperatureReader reader = new TemperatureReader(
         new Name(Global.DEVICE_PREFIX + "/home-client"),
+        group,
         new ConsumerSQLiteDBSource(":memory:"));
 
     final TemperatureReader.OnDataCallback onData = new TemperatureReader.OnDataCallback() {
