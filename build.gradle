@@ -19,14 +19,14 @@ repositories {
     jcenter()
 }
 
-targetCompatibility = '1.7'
-sourceCompatibility = '1.7'
+targetCompatibility = '1.8'
+sourceCompatibility = '1.8'
 
 dependencies {
     // This dependency is found on compile classpath of this component and consumers.
     compile 'com.google.guava:guava:20.0'
 //    compile files("../jndn/target/jndn-0.15.jar")
-    compile 'net.named-data:jndn-android:0.18'
+    implementation 'net.named-data:jndn-android:0.18'
     compile project(':jndn-node')
 
     // Use JUnit test framework
